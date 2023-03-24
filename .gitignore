@@ -59,3 +59,6 @@ sysinfo.txt
 crashlytics-build.properties
 
 *.DS_Store
+.DS_Store
+Assets/.DS_Store
+Assets/_Scripts/.DS_Store
