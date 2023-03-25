@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
     //수평 및 수직으로 발사될 광선의 갯수
     public int horizontalRayCount = 4;
     public int verticalRayCount = 4;
+
+    public CollisionInfo collisions;
     //Space between Each Ray
     float horizontalRaySpacing;
     float verticalRaySpacing;
@@ -37,6 +39,9 @@ public class PlayerController : MonoBehaviour
     public void Move(Vector3 velocity)
     {
         UpdateRaycastOrigins();
+
+        collisions.Reset();
+
         if (velocity.x != 0)
         {
             HorizontalCollisions(ref velocity);
@@ -48,26 +53,6 @@ public class PlayerController : MonoBehaviour
         
 
         transform.Translate(velocity);
-    }
-    
-    void VerticalCollisions(ref Vector3 velocity)
-    {
-        float directionY = Mathf.Sign(velocity.y);
-        float rayLength = Mathf.Abs(velocity.y) + skinWidth;
-        //Draw Ray
-        for (int i = 0; i < verticalRayCount; i++)
-        {
-            Vector2 rayOrigins = (directionY == -1) ? raycastOrigins.bottomLeft : raycastOrigins.topLeft;
-            rayOrigins += Vector2.right * (verticalRaySpacing * i + velocity.x);
-            RaycastHit2D rayHit = Physics2D.Raycast(rayOrigins, Vector2.up * directionY, rayLength, collisionMask);
-            Debug.DrawRay(rayOrigins, Vector2.up * directionY * rayLength, Color.red);
-
-            if (rayHit)
-            {
-                velocity.y = (rayHit.distance-skinWidth) * directionY;
-                rayLength = rayHit.distance;
-            }
-        }
     }
 
     void HorizontalCollisions(ref Vector3 velocity)
@@ -87,9 +72,37 @@ public class PlayerController : MonoBehaviour
             {
                 velocity.x = (rayHit.distance - skinWidth) * directionX;
                 rayLength = rayHit.distance;
+
+                collisions.left = directionX == -1;
+                collisions.right = directionX == 1;
             }
         }
     }
+
+    void VerticalCollisions(ref Vector3 velocity)
+    {
+        float directionY = Mathf.Sign(velocity.y);
+        float rayLength = Mathf.Abs(velocity.y) + skinWidth;
+        //Draw Ray
+        for (int i = 0; i < verticalRayCount; i++)
+        {
+            Vector2 rayOrigins = (directionY == -1) ? raycastOrigins.bottomLeft : raycastOrigins.topLeft;
+            rayOrigins += Vector2.right * (verticalRaySpacing * i + velocity.x);
+            RaycastHit2D rayHit = Physics2D.Raycast(rayOrigins, Vector2.up * directionY, rayLength, collisionMask);
+            Debug.DrawRay(rayOrigins, Vector2.up * directionY * rayLength, Color.red);
+
+            if (rayHit)
+            {
+                velocity.y = (rayHit.distance-skinWidth) * directionY;
+                rayLength = rayHit.distance;
+
+                collisions.below = directionY == -1;
+                collisions.above = directionY == 1;
+            }
+        }
+    }
+
+    
 
     void UpdateRaycastOrigins()
     {
@@ -118,6 +131,18 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    public struct CollisionInfo
+    {
+        public bool above, below;
+        public bool left, right;
+
+        public void Reset()
+        {
+            above = below = false;
+            left = right = false;
+
+        }
+    }
 
     // Update is called once per frame
     
